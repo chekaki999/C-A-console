@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>fan site</title>
+</head>
+<body bgcolor="black" >
+<div align="center" >
+<p>
+   <br><br><br><br><br><br><br><br><img id="eye" src="eye.gif" style="cursor: pointer;"  alt="Анимированный глаз"  <title="НУРБОЛ ГОВНО">
+</p>   
+ <p>  
+<script>
+    const eyeImage = document.getElementById('eye');
+
+    eyeImage.addEventListener('click', function() {
+        const audio = new Audio('scream.mp3');
+        audio.volume = 1;
+        audio.play();
+        
+        // Можно добавить эффект: например, глаз резко увеличивается при клике
+        eyeImage.style.transform = "scale(1.5)";
+    });
+</script>
+</p>
+</div>
+</body>
+</html>
