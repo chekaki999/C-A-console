@@ -1,3 +1,31 @@
-body{
-bgcolor:
+/* Цвет фона страницы */
+body {
+    background-color: yellow;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+/* Белый прямоугольник */
+.white-block {
+    background-color: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center; /* Центрирует текст и картинки внутри */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* Синий заголовок */
+h1 {
+    color: blue;
+    margin-top: 0;
+}
+
+/* Настройка картинки */
+img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
 }
