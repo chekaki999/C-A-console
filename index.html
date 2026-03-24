@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>C&A Terminal - CRT CRT CRT</title>
+    <style>
+        /* Общие настройки экрана */
+        body {
+            background-color: #0a0a0a;
+            color: #efefef; /* Почти белый для мягкого свечения */
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px; /* Уменьшенный шрифт */
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 95vh;
+            overflow: hidden;
+            transition: all 0.1s;
+            position: relative;
+        }
+
+        /* ЭФФЕКТ ЭЛТ-ПИКСЕЛЕЙ И СЕТКИ */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            /* Создаем сетку из крупных пикселей и строк */
+            background: 
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 100;
+            background-size: 100% 3px, 3px 100%; /* Размер "пикселя" */
+            pointer-events: none;
+        }
+
+        /* Виньетка (затемнение по краям как у старых ламп) */
+        body::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: radial-gradient(circle, rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.5) 100%);
+            z-index: 101;
+            pointer-events: none;
+        }
+
+        #output {
+            flex-grow: 1;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-bottom: 10px;
+            text-shadow: 0 0 2px #fff; /* Легкое свечение букв */
+            letter-spacing: 1px;
+        }
+
+        .input-line { display: flex; align-items: center; z-index: 10; }
+        #command-input {
+            background: transparent; border: none; color: #efefef;
+            font-family: inherit; font-size: 12px; outline: none;
+            flex-grow: 1; text-shadow: 0 0 2px #fff;
+        }
+
+        /* АНИМАЦИИ СБОЯ */
+        @keyframes shake {
+            0% { transform: translate(0,0); }
+            20% { transform: translate(-3px, 2px); }
+            40% { transform: translate(-3px, -2px); }
+            60% { transform: translate(3px, 2px); }
+            100% { transform: translate(0,0); }
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.9; }
+            100% { opacity: 1; }
+        }
+
+        .glitch-active { animation: shake 0.1s infinite, flicker 0.05s infinite; }
+        .kinger-unstable { text-shadow: 2px 0 0 #f00, -2px 0 0 #00f; }
+
+        .scanline {
+            width: 100%; height: 100px; z-index: 102;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(255,255,255,0.05) 50%, rgba(0,0,0,0) 100%);
+            position: fixed; top: -100px; left: 0; pointer-events: none;
+            animation: scanlineMove 8s linear infinite;
+        }
+
+        @keyframes scanlineMove {
+            0% { top: -100px; }
+            100% { top: 100%; }
+        }
+    </style>
+</head>
+<body id="terminal-body">
+    <div class="scanline"></div>
+    <div id="output"></div>
+    <div class="input-line" id="input-area">
+        <span id="prompt">></span>
+        <input type="text" id="command-input" autofocus autocomplete="off">
+    </div>
+
+<script>
+    const output = document.getElementById('output');
+    const input = document.getElementById('command-input');
+    const body = document.getElementById('terminal-body');
+    
+    let loggedIn = false;
+    let isTyping = false;
+    let errorCount = 0;
+
+    const characterStats = {
+        "POMNI": "NAME: POMNI\nSTATUS: ACTIVE\nSTABILITY: 72%\nSTORY: JUST_ARRIVED",
+        "KINGER": "NAME: KINGER\nSTATUS: UNSTABLE\nSTABILITY: 08%\nSTORY: SURVIVOR_01",
+        "JAX": "NAME: JAX\nSTATUS: ACTIVE\nSTABILITY: 89%\nSTORY: TROUBLEMAKER",
+        "RAGATHA": "NAME: RAGATHA\nSTATUS: ACTIVE\nSTABILITY: 55%\nSTORY: HELPER",
+        "GANGLE": "NAME: GANGLE\nSTATUS: FRAGILE\nSTABILITY: 40%\nSTORY: TRAGEDY_MASK"
+    };
+
+    async function typeText(text, delay = 20, isKinger = false) {
+        return new Promise((resolve) => {
+            isTyping = true;
+            let i = 0;
+            const span = document.createElement('span');
+            if (isKinger) span.className = 'kinger-unstable';
+            output.appendChild(span);
+
+            const interval = setInterval(() => {
+                span.innerText += text[i];
+                i++;
+                output.scrollTop = output.scrollHeight;
+                if (i >= text.length) {
+                    clearInterval(interval);
+                    output.innerHTML += "\n";
+                    isTyping = false;
+                    resolve();
+                }
+            }, delay);
+        });
+    }
+
+    async function handleFailure() {
+        errorCount++;
+        if (errorCount >= 3) body.classList.add('glitch-active');
+        
+        if (errorCount >= 7) {
+            input.disabled = true;
+            await typeText("CRITICAL_SYSTEM_BLOAT...", 100);
+            body.style.backgroundColor = "#000088";
+            output.innerHTML = "<h1 style='color: white'>FATAL ERROR 0xCA000</h1>";
+        } else {
+            await typeText("ERR: UNKNOWN_SEQUENCE_" + errorCount, 30);
+        }
+    }
+
+    input.addEventListener('keydown', async function(e) {
+        if (isTyping || e.key !== 'Enter') return;
+        const val = input.value;
+        input.value = '';
+        await typeText("> " + val, 10);
+
+        const parts = val.trim().toUpperCase().split(" ");
+        const cmd = parts[0];
+        const arg = parts[1];
+
+        if (!loggedIn) {
+            if (cmd === "QUEENIE123") {
+                loggedIn = true;
+                await typeText("C&A AUTHENTICATION: OK", 40);
+                await typeText("COMMANDS: LS, VIEW [NAME], CLEAR", 30);
+            } else {
+                await handleFailure();
+            }
+            return;
+        }
+
+        if (cmd === "LS") {
+            await typeText("FILES: " + Object.keys(characterStats).join(", "), 30);
+        } else if (cmd === "VIEW") {
+            if (arg && characterStats[arg]) {
+                await typeText(`LOADING ${arg}...`, 50, (arg === "KINGER"));
+                await typeText(characterStats[arg], 20, (arg === "KINGER"));
+            } else {
+                await handleFailure();
+            }
+        } else if (cmd === "CLEAR") {
+            output.innerHTML = "";
+        } else {
+            await handleFailure();
+        }
+    });
+
+    window.onload = () => typeText("C&A STATION 4-B READY\nPASSWORD REQUIRED:", 50);
+</script>
+</body>
+</html>
